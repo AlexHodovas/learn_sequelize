@@ -2,14 +2,19 @@ const express = require("express");
 const { Sequelize, DataTypes } = require("sequelize");
 
 const app = express();
+const { DB_NAMES, DB_PASSWORD } = require("../constants");
 const { createBookTable } = require("../models/book");
+const { createStudentsTable } = require("../models/students");
+const { createGradeTable } = require("../models/grade");
 const {
   createNewBook,
   findAllBooks,
   findOneBookById,
 } = require("../controllers/book");
+const { addExampleDataToGradeTable } = require("../controllers/grade");
+const { addExampleDataToStudentTable } = require("../controllers/students");
 
-const sequelize = new Sequelize("hello_world_db", "root", "123456789", {
+const sequelize = new Sequelize(DB_NAMES.student_db, "root", DB_PASSWORD, {
   host: "127.0.0.1",
   dialect: "mysql",
 });
@@ -23,18 +28,25 @@ sequelize
     console.error("Unable to connect to the database: ", error);
   });
 
-const Book = createBookTable(sequelize, DataTypes);
+// const Book = createBookTable(sequelize, DataTypes);
+const Student = createStudentsTable(sequelize, DataTypes);
+const Grade = createGradeTable(sequelize, DataTypes);
+
+// One-To-One association
+Student.belongsTo(Grade);
 
 sequelize
-  .sync()
-  .then(() => {
-    console.log("Book table created successfully!");
-    // createNewBook(Book);
-    // findAllBooks(Book);
-    findOneBookById(Book);
+  .sync({ force: true })
+  .then(async () => {
+    try {
+      await addExampleDataToGradeTable(Grade);
+      await addExampleDataToStudentTable(Student, Grade);
+    } catch (error) {
+      console.error("Failed to retrieve data : ", error);
+    }
   })
   .catch((error) => {
-    console.error("Unable to create table : ", error);
+    console.error("Unable to create the table : ", error);
   });
 
 app.listen("3000", "localhost", (error) => {
