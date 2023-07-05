@@ -40,6 +40,15 @@ const User = createUserTable(sequelize, DataTypes);
 // One-To-One association
 Student.belongsTo(Grade);
 
+const A = sequelize.define('A', /* ... */);
+// const a = A.create({ a: "a" }).then(r => r);
+
+const B = sequelize.define('B', /* ... */);
+// const b = B.create({ b: "b" }).then(r => r);
+
+A.hasOne(B); // A HasOne B
+B.belongsTo(A);
+
 sequelize
   .sync() // { force: true }
   .then(async () => {
